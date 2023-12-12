@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 fn is_valid(map: Vec<char>, nums: &Vec<i64>) -> bool {
     let mut n = 0;
-    //let mut vec = Vec::new();
     let mut idx = 0;
     for c in map {
         if c == '#' {
@@ -12,14 +11,12 @@ fn is_valid(map: Vec<char>, nums: &Vec<i64>) -> bool {
                 if idx >= nums.len() || n != nums[idx] {
                     return false;
                 }
-                //vec.push(n);
                 idx += 1;
             }
             n = 0;
         }
     }
     if n > 0 {
-        //vec.push(n);
         if idx >= nums.len() || n != nums[idx] {
             return false;
         }
@@ -29,22 +26,11 @@ fn is_valid(map: Vec<char>, nums: &Vec<i64>) -> bool {
         return false;
     }
 
-    //println!("{:?}", vec);
-    /*if nums.len() != vec.len() {
-        return false;
-    }
-    for i in 0..vec.len() {
-        if vec[i] != nums[i] {
-            return false;
-        }
-    }*/
     return true;
 }
 
-fn rec(map: Vec<char>, idx: usize, springs: i64, nums: &Vec<i64>) -> i64 {
+/*fn rec(map: Vec<char>, idx: usize, springs: i64, nums: &Vec<i64>) -> i64 {
     if idx == map.len() || springs == 0 {
-        //println!("{:?}", map);
-        //println!("{:?}", nums);
         if is_valid(map, nums) {
             return 1;
         }
@@ -63,13 +49,10 @@ fn rec(map: Vec<char>, idx: usize, springs: i64, nums: &Vec<i64>) -> i64 {
     }
 
     return sum;
-}
+}*/
 
-fn rec2(map: Vec<char>, mut idx: usize, numidx: usize, nums: &Vec<i64>, depth: i64) -> i64 {
+fn rec2(map: Vec<char>, mut idx: usize, numidx: usize, nums: &Vec<i64>, mut hashmap: &mut HashMap<(usize, usize), i64>) -> i64 {
     if idx >= map.len() || numidx >= nums.len() {
-        //println!("{:?}", map);
-        //println!("{:?}", nums);
-        println!("{}", depth);
         if is_valid(map, nums) {
             return 1;
         }
@@ -82,16 +65,23 @@ fn rec2(map: Vec<char>, mut idx: usize, numidx: usize, nums: &Vec<i64>, depth: i
         idx += 1;
     }
     if idx == map.len() {
-        if is_valid(map, nums) {
-            return 1;
-        }
         return 0;
+    }
+
+    if hashmap.contains_key(&(idx, numidx)) == true {
+        return *hashmap.get(&(idx, numidx)).unwrap();
     }
 
     if map[idx] == '?' {
         let mut newmap = map.clone();
         newmap[idx] = '.';
-        sum += rec2(newmap.clone(), idx, numidx, &nums, depth+1);
+        let mut newidx = idx;
+        while newidx < newmap.len() && newmap[newidx] == '.' {
+            newidx += 1;
+        }
+        let res = rec2(newmap.clone(), newidx, numidx, &nums, &mut hashmap);
+        hashmap.insert((newidx, numidx), res);
+        sum += res;
 
         let nr = nums[numidx] as usize;
         if idx+nr > newmap.len() {
@@ -111,7 +101,7 @@ fn rec2(map: Vec<char>, mut idx: usize, numidx: usize, nums: &Vec<i64>, depth: i
             }
             newmap[idx] = '.';
         }
-        sum += rec2(newmap, idx, numidx+1, &nums, depth+1);
+        sum += rec2(newmap, idx, numidx+1, &nums, &mut hashmap);
     } else {
         let mut newmap = map.clone();
         let nr = nums[numidx] as usize;
@@ -132,7 +122,7 @@ fn rec2(map: Vec<char>, mut idx: usize, numidx: usize, nums: &Vec<i64>, depth: i
             }
             newmap[idx] = '.';
         }
-        sum = rec2(newmap, idx, numidx+1, &nums, depth+1);
+        sum = rec2(newmap, idx, numidx+1, &nums, &mut hashmap);
     }
 
     return sum;
@@ -170,13 +160,12 @@ fn main() {
                 newn.push(*num);
             }
         }
-        //println!("{:?}", springs);
-        //println!("{:?}", n);
-        //let s = rec(newsprings, 0, nr, &newn); 
-        let s = rec2(newsprings, 0, 0, &newn, 0); 
-        println!("{}", s);
+
+        //let s = rec(newsprings, 0, nr, &newn);
+        let mut hashmap = HashMap::new();
+        let s = rec2(newsprings, 0, 0, &newn, &mut hashmap);
+        //println!("{}", s);
         sum += s;
-        //break;
     }
    
     println!("{}", sum);
